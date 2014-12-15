@@ -1,0 +1,47 @@
+---
+- name: be sure prerequirements are installed
+  yum: name={{ item }} state=installed
+  with_items:
+    - ncurses-devel
+    - gcc-c++
+  tags: mysqld
+
+- name: check already installed
+  stat: path={{ install_path.mysql }}/bin/mysql
+  register: st
+
+- name: copy source file
+  when: st.stat.exists == false
+  copy: src={{ source_path }}/mysql-5.0.87.tar.gz dest=/tmp/
+  tags: mysqld
+
+- name: unzip
+  when: st.stat.exists == false
+  command: tar xzf mysql-5.0.87.tar.gz chdir=/tmp/
+  tags: mysqld
+
+- name: configure
+  when: st.stat.exists == false
+  command: >
+    ./configure
+    --prefix={{ install_path.mysql }}
+    --with-extra-charsets=all
+    --with-charset=utf8
+    --enable-thread-safe-client
+    --enable-local-infile
+    --enable-assembler
+    --with-client-ldflags=-all-static
+    --with-mysqld-ldflags=-all-static
+    --with-readline
+    chdir=/tmp/mysql-5.0.87/
+  tags: mysqld
+
+- name: make
+  when: st.stat.exists == false
+  command: make chdir=/tmp/mysql-5.0.87/
+  tags: mysqld
+
+- name: make install
+  when: st.stat.exists == false
+  command: make install chdir=/tmp/mysql-5.0.87/
+  tags: mysqld

@@ -1,0 +1,63 @@
+---
+- name: be sure prerequirements are installed
+  yum: name={{ item }} state=installed
+  with_items:
+    - openldap-devel
+    - zlib-devel
+    - openssl-devel
+  tags: httpd
+
+- name: check already installed
+  stat: path={{ install_path.apache }}/bin/apachectl_none
+  register: st
+
+- name: copy source file
+  when: st.stat.exists == false
+  copy: src={{ source_path }}/httpd-2.2.21.tar.bz2 dest=/tmp/
+  tags: httpd
+
+- name: unzip
+  when: st.stat.exists == false
+  command: tar xjf httpd-2.2.21.tar.bz2 chdir=/tmp/
+  tags: httpd
+
+- name: configure
+  when: st.stat.exists == false
+  command: >
+    ./configure
+    --prefix={{ install_path.apache }}
+    --enable-so
+    --enable-rewrite
+    --enable-authnz-ldap
+    --enable-cache
+    --enable-disk-cache
+    --enable-ldap
+    --enable-mem-cache
+    --with-ldap
+    --enable-ext-filter
+    --with-included-apr
+    --enable-authn-alias
+    --enable-auth-basic
+    --enable-authz-user
+    --enable-deflate
+    --enable-expires
+    --enable-authz-dbm
+    --enable-ssl
+    chdir=/tmp/httpd-2.2.21
+  tags: httpd
+
+- name: make
+  when: st.stat.exists == false
+  command: make chdir=/tmp/httpd-2.2.21/
+  tags: httpd
+
+- name: make install
+  when: st.stat.exists == false
+  command: make install chdir=/tmp/httpd-2.2.21/
+  tags: httpd
+
+- name: copy run script
+  when: st.stat.exists == false
+  template: src=httpd.j2 dest=/etc/init.d/httpd mode=0755
+  notify: restart httpd
+  tags: httpd

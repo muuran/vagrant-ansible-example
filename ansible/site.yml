@@ -1,0 +1,13 @@
+---
+
+- hosts: all
+  sudo: yes
+  roles:
+    - common
+
+- hosts: webservers
+  sudo: yes
+  roles:
+    - apache
+    - mysql
+    - php

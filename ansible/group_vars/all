@@ -1,0 +1,7 @@
+---
+source_path: roles/common/files
+
+install_path:
+  apache: /usr/local/apache2
+  mysql: /usr/local/mysql
+  php: /usr/local/php
